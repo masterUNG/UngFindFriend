@@ -13,7 +13,7 @@ final Map<String, WidgetBuilder> map = {
 String? initialRoute;
 
 void main() {
-  initialRoute = MyConstant.routeAuthen;
+  initialRoute = MyConstant.routeMyService;
   runApp(MyApp());
 }
 

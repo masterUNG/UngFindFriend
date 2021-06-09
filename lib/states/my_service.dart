@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ungfindfriend/models/user_model.dart';
 import 'package:ungfindfriend/utility/my_constant.dart';
 import 'package:ungfindfriend/widgets/show_progress.dart';
+import 'package:ungfindfriend/widgets/show_title.dart';
 
 class MyService extends StatefulWidget {
   const MyService({Key? key}) : super(key: key);
@@ -19,15 +20,22 @@ class _MyServiceState extends State<MyService> {
   bool load = true;
   LatLng? latLng;
 
+  List<Widget> widgets = [];
+  int indexWidget = 0;
+  List<UserModel> userModels = [];
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    // widgets.add(listFriend());
+    // widgets.add(buildMap());
     readAllData();
   }
 
   Future<Null> readAllData() async {
     await Dio().get(MyConstant.apiReadAllUser).then((value) {
+      print('### value ==>> $value');
       for (var item in json.decode(value.data)) {
         UserModel model = UserModel.fromMap(item);
 
@@ -40,6 +48,7 @@ class _MyServiceState extends State<MyService> {
         setState(() {
           load = false;
           createMarker(model);
+          userModels.add(model);
         });
       }
     });
@@ -64,16 +73,46 @@ class _MyServiceState extends State<MyService> {
         backgroundColor: MyConstant.primary,
         title: Text('Show Location Friend'),
       ),
-      body: load
-          ? ShowProgress()
-          : GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: latLng!,
-                zoom: 16,
+      body: load ? ShowProgress() : listFriend(),
+    );
+  }
+
+  Widget listFriend() => userModels.length == 0
+      ? ShowProgress()
+      : ListView.builder(
+          itemCount: userModels.length,
+          itemBuilder: (context, index) => InkWell(
+            onTap: () => print('### You Click ${userModels[index].name}'),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShowTitle(
+                        title: userModels[index].name,
+                        textStyle: MyConstant().h2Style()),
+                    ShowTitle(
+                        title: 'lat = ${userModels[index].lat}',
+                        textStyle: MyConstant().h3Style()),
+                    ShowTitle(
+                        title: 'lng = ${userModels[index].lng}',
+                        textStyle: MyConstant().h3Style()),
+                  ],
+                ),
               ),
-              onMapCreated: (controller) {},
-              markers: Set<Marker>.of(markers.values),
             ),
+          ),
+        );
+
+  GoogleMap buildMap() {
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: latLng!,
+        zoom: 16,
+      ),
+      onMapCreated: (controller) {},
+      markers: Set<Marker>.of(markers.values),
     );
   }
 }
